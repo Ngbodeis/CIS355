@@ -6,7 +6,7 @@ class Database
 	private static $dbName = 'ngbodeis355wi19' ; 
 	private static $dbHost = '10.8.30.49' ;
 	private static $dbUsername = 'ngbodeis355wi19';
-	private static $dbUserPassword = 'Poopis13!';
+	private static $dbUserPassword = 'ngb12345!';
 	
 	private static $cont  = null;
 	
