@@ -1,6 +1,12 @@
 <?php 
 	
-	require '../database/database.php';
+	/* This file is displayed on the index.php screen as the update button, and once pressed allows the user to 
+	   update the information based on what the user enters. It takes what the user enters, make sure it is valid,
+	   and if it is valid updates the database table.
+	*/
+	
+	/* connect to database.php if exists   */
+	require_once 'database.php';
 
 	$id = null;
 	if ( !empty($_GET['id'])) {

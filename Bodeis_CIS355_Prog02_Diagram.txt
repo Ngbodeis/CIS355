@@ -1,0 +1,59 @@
+									PROG02 Diagram
+
+
+
+Index.php
+
+		Client 															Server
+1. https://csis.svsu.edu/~ngbodeis/Bodeis_CIS355_Prog01/        								2. Customer.php (display_list()) 
+3. Display list screen
+4. Click Create button														5. create.php
+																6. Index.php
+7. Display list screen
+
+
+Create Button
+
+		Client										Server
+1. Click Create Button									2. create.php
+3. Enter Customer Data								
+											4. if(empty($_Post)
+											5. $valid = false
+											6. if(!empty($_Post)
+7. Click Create Button
+8. Display List Screen
+
+Delete Button
+
+		Client										Server
+1.Click Delete Button								2. delete.php
+										3. delete from customers where id = ?
+4.Click Yes									5. execute(array($id))
+										6. header index.php
+4.Click No									5. index.php
+
+
+
+Read Button
+
+		Client										Server
+1.Click Read Button								2. customer.php
+										3. customer.class.php
+										4. select_db_record()
+5. Display Customer Details
+6. Click Back button								7. list_record()
+8. Display list records
+
+Update Button
+
+		Client										Server
+1. Click Update Button									2. customer.php
+											3. customer.class.php
+											4. update_records()
+											5. select_db_record()
+6. Show Updated Form
+7. Enter New Data
+8. Click Update Button	
+											9. update_db_record()
+											10. field_ALLValid() if true
+											11. list_records()

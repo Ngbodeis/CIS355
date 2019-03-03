@@ -1,4 +1,8 @@
 <?php
+	/* This file allows the webpage to be connected to the database using the saved variables 
+	*/
+
+
 class Database 
 {
 	// these are not the real passwords

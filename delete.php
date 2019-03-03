@@ -1,7 +1,15 @@
 <?php 
+	
+	/*	This is the delete button for the crud display page. When the delete button is clicked this is
+		page is displayed and allows the user to delete a record based of the corresponding customer id
+		which is generated in the database based off the number of tables entries.
+	*/
+	
+	/* connect to database.php if exists   */
 	require_once 'database.php';
 	$id = 0;
 	
+	/* if $id not empty, then $id is the $request id to be deleted */
 	if ( !empty($_GET['id'])) {
 		$id = $_REQUEST['id'];
 	}
@@ -23,6 +31,7 @@
 ?>
 
 <!DOCTYPE html>
+<!-- Display the customer screen which each corresponding entry box to the corresponding data field -->
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -40,7 +49,7 @@
 		    		
 	    			<form class="form-horizontal" action="delete.php" method="post">
 	    			  <input type="hidden" name="id" value="<?php echo $id;?>"/>
-					  <p class="alert alert-error">Are you sure to delete ?</p>
+					  <p class="alert alert-error">Are you sure you want to delete ?</p>
 					  <div class="form-actions">
 						  <button type="submit" class="btn btn-danger">Yes</button>
 						  <a class="btn" href="index.php">No</a>

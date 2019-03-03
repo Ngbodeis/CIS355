@@ -1,10 +1,17 @@
 <?php 
-	require '../database/database.php';
+
+	/* This file is displayed on the index.php as the read button. When the button is clicked is pulls up the 
+		record of the file with the corresponding id number and displays the customers data from the database.  
+	*/
+
+	/* connect to database.php if exists   */
+	require_once 'database.php';
 	$id = null;
 	if ( !empty($_GET['id'])) {
 		$id = $_REQUEST['id'];
 	}
 	
+	/* if no record is chosen, then the location will just be the default index.php screen            */
 	if ( null==$id ) {
 		header("Location: index.php");
 	} else {
@@ -19,13 +26,15 @@
 ?>
 
 <!DOCTYPE html>
+
+<!-- Display the customer screen which each corresponding entry box to the corresponding data field -->
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <link   href="css/bootstrap.min.css" rel="stylesheet">
     <script src="js/bootstrap.min.js"></script>
 </head>
-
+<!-- display the customer information just based off of the id selected   -->
 <body>
     <div class="container">
     

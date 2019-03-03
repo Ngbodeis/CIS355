@@ -1,9 +1,19 @@
 <!DOCTYPE html>
+
+<!--
+	This is the default screen for when choosing the directory. It will auto display all records in the list, and allows the user_error
+	to update the information by clicking the corresponding buttons and directing them to the other .php files to complete the actions they
+	are looking to do.
+-->
+
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <link   href="css/bootstrap.min.css" rel="stylesheet">
     <script src="js/bootstrap.min.js"></script>
+	<!-- button to link to github -->
+<a href="https://github.com/Ngbodeis/CIS355" class="button">Go to Github</a>
+<a href="https://csis.svsu.edu/~ngbodeis/Bodeis_CIS355_Prog02/Bodeis_CIS355_Prog02_Diagram.txt" class="button">PROG02 DIAGRAM</a>
 </head>
 
 <body>
@@ -30,7 +40,10 @@
 					   require_once 'database.php';
 					   $pdo = Database::connect();
 					   $sql = 'SELECT * FROM customers ORDER BY id DESC';
-	 				   foreach ($pdo->query($sql) as $row) {
+	 				   
+					   /* This for each loop goes through each aspect of the array and lists all the records out into a table which each
+						  row formatted into it's corresponding column.*/
+					   foreach ($pdo->query($sql) as $row) {
 						   		echo '<tr>';
 							   	echo '<td>'. $row['name'] . '</td>';
 							   	echo '<td>'. $row['email'] . '</td>';

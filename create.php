@@ -1,5 +1,12 @@
 <?php 
 	
+	/*	The file is shown on the index.php sceen as the create button. When the use clicks the create button it brings
+		up the screen that allows the user to create a new customer as long as the data entered is valid. If the data isn't
+		valid, it redisplays the create screen and shows error messages until the data entered in by the user is valid.
+	*/
+	
+	
+	/* connect to database.php if exists   */
 	require_once 'database.php';
 
 	if ( !empty($_POST)) {
@@ -54,7 +61,7 @@
     <link   href="css/bootstrap.min.css" rel="stylesheet">
     <script src="js/bootstrap.min.js"></script>
 </head>
-
+<!-- Display the create customer screen which each corresponding entry box to the corresponding data field -->
 <body>
     <div class="container">
     
