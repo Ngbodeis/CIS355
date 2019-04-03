@@ -1,12 +1,18 @@
 <?php
 
+require_once ('functions01.php');
+
 class Customer { 
     public $id;
     public $name;
     public $email;
     public $mobile;
+	public $description;
 	public $password; // text from form
 	public $password_hashed; // hashed password
+	
+	public $path = '';
+	
     private $noerrors = true;
     private $nameError = null;
     private $emailError = null;
@@ -14,6 +20,16 @@ class Customer {
 	private $passwordError = null;
     private $title = "Customer";
     private $tableName = "customers";
+
+	
+	// initialize $_FILES variables
+	private $fileName = '';
+	private $tmpName  = '';
+	private $fileSize = '';
+	private $fileType = '';
+	private $content  = '';
+	
+	
     
     function create_record() { // display "create" form
         $this->generate_html_top (1);
@@ -27,6 +43,21 @@ class Customer {
     function read_record($id) { // display "read" form
         $this->select_db_record($id);
         $this->generate_html_top(2);
+				echo"
+				<div class='control-group col-md-6'>
+					<div class='controls '>
+					"; 
+					if ($this->fileSize > 0) {
+						$source = ' https://csis.svsu.edu/~ngbodeis/crud_oo_complete/uploads/';
+						echo '<img src=' . $source .  $this->fileName . ' width="250" height="250">   ';
+					}
+					else 
+						echo 'No photo on file.';
+					echo "
+					</div>
+				</div>
+		
+			"; 
         $this->generate_form_group("name", $this->nameError, $this->name, "disabled");
         $this->generate_form_group("email", $this->emailError, $this->email, "disabled");
         $this->generate_form_group("mobile", $this->mobileError, $this->mobile, "disabled");
@@ -35,10 +66,37 @@ class Customer {
     
     function update_record($id) { // display "update" form
         if($this->noerrors) $this->select_db_record($id);
-        $this->generate_html_top(3, $id);
+        $this->generate_html_top(3, $id); 
+						echo"
+				<div class='control-group col-md-6'>
+					<div class='controls '>
+					"; 
+					if ($this->fileSize > 0) {
+						
+						$source = ' https://csis.svsu.edu/~ngbodeis/crud_oo_complete/uploads/';
+						echo '<img src=' . $source .  $this->fileName . ' width="250" height="250">   ';
+						
+					}
+					else 
+						echo 'No photo on file.';
+					echo"
+					</div>
+				</div>
+		
+			"; 
         $this->generate_form_group("name", $this->nameError, $this->name, "autofocus onfocus='this.select()'");
         $this->generate_form_group("email", $this->emailError, $this->email);
         $this->generate_form_group("mobile", $this->mobileError, $this->mobile);
+		//display image control button
+		echo"
+			<div class='control-group <?php echo !empty($pictureError)?'error':'';?>
+					<label class='control-label'>Picture</label>
+					<div class='controls'>
+						<input type='hidden' name='MAX_FILE_SIZE' value='16000000'>
+						<input name='userfile' type='file' id='userfile'>
+					</div>
+					</div>
+		";
         $this->generate_html_bottom(3);
     } // end function update_record()
     
@@ -79,22 +137,9 @@ class Customer {
             // if valid data, insert record into table
             $pdo = Database::connect();
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			
-			
-			//$this->password_hashed = MD5($password);
             $sql = "INSERT INTO $this->tableName (name,email,mobile,password_hash) values(?, ?, ?, ?)";
             $q = $pdo->prepare($sql);
             $q->execute(array($this->name,$this->email,$this->mobile,MD5($this->password)));
-			
-			
-			/*
-			$sql = "INSERT INTO $this->tableName (name,email,mobile,password_hash) values(?, ?, ?, ?)";
-            $q = $pdo->prepare($sql);
-            $q->execute(array($this->name,$this->email,$this->mobile,$this->password));
-			*/
-			
-			
-			
             Database::disconnect();
             header("Location: $this->tableName.php"); // go back to "list"
         }
@@ -116,27 +161,221 @@ class Customer {
         $this->name = $data['name'];
         $this->email = $data['email'];
         $this->mobile = $data['mobile'];
+		$this->fileName = $data['fileName'];
+        $this->fileSize = $data['fileSize'];
+        $this->fileType = $data['fileType'];
+		$this->content = $data['fileContent'];
+		$this->description = $data['description'];
+		$this->path = $data['path'];
     } // function select_db_record()
+	
+	
+	
+	
+	
+	
+	    function update_db_record ($id) {
+        // initialize $_FILES variables
+		$this->fileName = $_FILES['userfile']['name'];
+		$this->tmpName  = $_FILES['userfile']['tmp_name'];
+		$this->fileSize = $_FILES['userfile']['size'];
+		$this->fileType = $_FILES['userfile']['type'];
+		$this->content = file_get_contents($this->tmpName);
+		$this->description = $_POST['description']; 
+		
+		$this->path ='/home/ngbodeis/public_html/curd_oo_complete/uploads/' . $this->fileName;
+		
+		$fileLocation = "uploads/";
+        $fileFullPath = $fileLocation . $this->fileName;
+		if($this->fileSize > 160000) {
+					echo "File size caused an issue";
+		}
+		else{
+			$this->id = $id;
+			if (!file_exists($fileFullPath)) {		
+				
+				if ($this->fieldsAllValid()) {
+
+					$this->noerrors = true;
+					$pdo = Database::connect();
+					$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+					$sql = "UPDATE $this->tableName  set name = ?, email = ?, mobile = ?, fileName = ?, fileSize = ?, fileType = ?, fileContent = ?, description = ?, path = ? WHERE id = ?";
+					$q = $pdo->prepare($sql);
+					$q->execute(array($this->name, $this->email, $this->mobile, $this->fileName, $this->fileSize, $this->fileType, $this->content, $this->description, $this->path, $this->id));
+					
+					move_uploaded_file($this->tmpName, $fileFullPath);
+					
+					// list all files in database 
+					// ORDER BY BINARY filename ASC (sorts case-sensitive, like Linux)
+	 
+					echo " 
+						<div class='form-actions'>
+						
+							<a href='$this->tableName.php' class='btn btn-success'>Back to Customers</a> 
+						</div> 
+							<a href='https://csis.svsu.edu/~ngbodeis/crud_oo_complete/uploads' target='_blank'>Uploaded Files</a><br />";
+	 
+					echo '<br><br>All files in database...<br><br>';
+					$sql = 'SELECT * FROM customers  ' 
+						. 'ORDER BY BINARY fileName ASC;';
+					$i = 0; 
+					$source = ' https://csis.svsu.edu/~ngbodeis/crud_oo_complete/uploads/';
+					$path = '';
+					$path2 = '';
+					$pic = "No File or Description for this Customer";
+					foreach ($pdo->query($sql) as $row) {
+				
+						$temp = $row['fileName'];
+						if($temp != "") {
+							$pic = ' <img src=' . $source .  $row['fileName'] . ' width="250" height="250">   ';
+							$path = '/home/ngbodeis/public_html/crud_oo_complete/uploads/' . $row['fileName'];
+						
+							$path2 = " <a href=" . $source . $row['fileName'] . " target=  '_blank' > " . $path . "</a>";
+						}	
+				
+						echo ' ... [' . $i++ . '] --- ' . $row['fileName'] . '       ' .$row['description'] .  
+							  $pic .  $path2 .
+							 
+							 '<br>';
+					}
+					
+					echo '<br><br>';
+
+					// list all files in subdirectory
+					echo 'All files in subdirectory...<br>';
+					echo '<pre>';
+					$arr = array_slice(scandir("$fileLocation"), 2);
+					asort($arr);
+					print_r($arr);
+					echo '<pre>';
+					echo '<br><br>';
+				
+					
+					Database::disconnect();
+				
+				
+				//	header("Location: $this->tableName.php");
+				}
+				else {
+					$this->noerrors = false;
+					$this->update_record($id);  // go back to "update" form
+				}
+			}
+			else {
+				echo "File <b><i>" . $this->fileName 
+					. "</i></b> already exists. Please rename file.";
+			
+			}
+		}
+    }//end function update_db_record
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
     
-    function update_db_record ($id) {
-        $this->id = $id;
-        if ($this->fieldsAllValid()) {
-            $this->noerrors = true;
-            $pdo = Database::connect();
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $sql = "UPDATE $this->tableName  set name = ?, email = ?, mobile = ? WHERE id = ?";
-            $q = $pdo->prepare($sql);
-            $q->execute(array($this->name,$this->email,$this->mobile,$this->id));
-            Database::disconnect();
-            header("Location: $this->tableName.php");
-        }
-        else {
-            $this->noerrors = false;
-            $this->update_record($id);  // go back to "update" form
-        }
-    } // end function update_db_record 
+ /*   function update_db_record ($id) {
+        // initialize $_FILES variables
+		$this->fileName = $_FILES['userfile']['name'];
+		$this->tmpName  = $_FILES['userfile']['tmp_name'];
+		$this->fileSize = $_FILES['userfile']['size'];
+		$this->fileType = $_FILES['userfile']['type'];
+		$this->content = file_get_contents($this->tmpName);
+		$this->description = $_POST['description']; 
+		
+		$this->path ='/home/ngbodeis/public_html/crud_oo_complete/uploads/' . $this->fileName;
+		
+		$fileLocation = "uploads/";
+        $fileFullPath = $fileLocation . $this->fileName;
+		if($this->fileSize > 160000) {
+					echo "File size caused an issue";
+		}
+		else{
+			$this->id = $id;
+			if (!file_exists($fileFullPath)) {		
+				
+				if ($this->fieldsAllValid()) {
+
+					$this->noerrors = true;
+					$pdo = Database::connect();
+					$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+					$sql = "UPDATE $this->tableName  set name = ?, email = ?, mobile = ?, fileName = ?, fileSize = ?, fileType = ?, fileContent = ?, description = ?, path = ? WHERE id = ?";
+					$q = $pdo->prepare($sql);
+					$q->execute(array($this->name, $this->email, $this->mobile, $this->fileName, $this->fileSize, $this->fileType, $this->content, $this->description, $this->path, $this->id));
+					
+					move_uploaded_file($this->tmpName, $fileFullPath);
+					
+					// list all files in database 
+					// ORDER BY BINARY filename ASC (sorts case-sensitive, like Linux)
+	 
+					echo " 
+						<div class='form-actions'>
+						
+							<a href='$this->tableName.php' class='btn btn-success'>Back to Customers</a> 
+						</div> 
+							<a href='https://csis.svsu.edu/~ngbodeis/crud_oo_complete/uploads' target='_blank'>Uploaded Files</a><br />";
+	 
+					echo '<br><br>All files in database...<br><br>';
+					$sql = 'SELECT * FROM customers  ' 
+						. 'ORDER BY BINARY fileName ASC;';
+					$i = 0; 
+					$source = ' https://csis.svsu.edu/~ngbodeis/crud_oo_complete/uploads/';
+					$path = '';
+					$path2 = '';
+					$pic = "No File or Description for this Customer";
+					foreach ($pdo->query($sql) as $row) {
+				
+						$temp = $row['fileName'];
+						if($temp != "") {
+							$pic = ' <img src=' . $source .  $row['fileName'] . ' width="250" height="250">   ';
+							$path = '/home/ngbodeis/public_html/crud_oo_complete/uploads/' . $row['fileName'];
+						
+							$path2 = " <a href=" . $source . $row['fileName'] . " target=  '_blank' > " . $path . "</a>";
+						}	
+				
+						echo ' ... [' . $i++ . '] --- ' . $row['fileName'] . '       ' .$row['description'] .  
+							  $pic .  $path2 .
+							 
+							 '<br>';
+					}
+					
+					echo '<br><br>';
+
+					// list all files in subdirectory
+					echo 'All files in subdirectory...<br>';
+					echo '<pre>';
+					$arr = array_slice(scandir("$fileLocation"), 2);
+					asort($arr);
+					print_r($arr);
+					echo '<pre>';
+					echo '<br><br>';
+				
+					
+					Database::disconnect();
+				
+				
+				//	header("Location: $this->tableName.php");
+				}
+				else {
+					$this->noerrors = false;
+					$this->update_record($id);  // go back to "update" form
+				}
+			}
+			else {
+				echo "File <b><i>" . $this->fileName 
+					. "</i></b> already exists. Please rename file.";
+			
+			}
+		}
+    }//end function update_db_record */
     
-    function delete_db_record($id) {
+	   function delete_db_record($id) {
         $pdo = Database::connect();
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $sql = "DELETE FROM $this->tableName WHERE id = ?";
@@ -146,6 +385,8 @@ class Customer {
         header("Location: $this->tableName.php");
     } // end function delete_db_record()
     
+	
+	
     private function generate_html_top ($fun, $id=null) {
         switch ($fun) {
             case 1: // create
@@ -188,7 +429,7 @@ class Customer {
                         <p class='row'>
                             <h3>$funWord a $this->title</h3>
                         </p>
-                        <form class='form-horizontal' action='$this->tableName.php?fun=$funNext' method='post'>                        
+                        <form class='form-horizontal' action='$this->tableName.php?fun=$funNext' method='post' enctype='multipart/form-data'>                        
                     ";
     } // end function generate_html_top()
     
@@ -228,29 +469,6 @@ class Customer {
                     ";
     } // end function generate_html_bottom()
     
-   /* private function generate_form_group ($label, $labelError, $val, $modifier="") {
-        echo "<div class='form-group'";
-        echo !empty($labelError) ? ' alert alert-danger ' : '';
-        echo "'>";
-        echo "<label class='control-label'>$label &nbsp;</label>";
-        //echo "<div class='controls'>";
-        echo "<input "
-            . "name='$label' "
-            . "type='text' "
-            . "$modifier "
-            . "placeholder='$label' "
-            . "value='";
-        echo !empty($val) ? $val : '';
-        echo "'>";
-        if (!empty($labelError)) {
-            echo "<span class='help-inline'>";
-            echo "&nbsp;&nbsp;" . $labelError;
-            echo "</span>";
-        }
-        //echo "</div>"; // end div: class='controls'
-        echo "</div>"; // end div: class='form-group'
-    } // end function generate_form_group()
-    */
 		 private function generate_form_group ($label, $labelError, $val, $modifier="", $fieldType="text") {
         echo "<div class='form-group'";
         echo !empty($labelError) ? ' alert alert-danger ' : '';
@@ -310,8 +528,9 @@ class Customer {
         echo "
             </head>
             <body>
-               <a href='https://github.com/Ngbodeis/CIS355-Prog02' target='_blank'>Go To Github</a><br />
-			<a href='https://csis.svsu.edu/~ngbodeis/Bodeis_CIS355_Prog02/Bodeis_CIS355_Prog02_Diagram.txt' target='_blank'>Prog02 Diagram</a><br />
+               <a href='https://github.com/Ngbodeis/CIS355' target='_blank'>Go To Github</a><br />
+				<a href='https://csis.svsu.edu/~ngbodeis/Bodeis_CIS355_Prog02/Bodeis_CIS355_Prog02_Diagram.txt' target='_blank'>Prog02&Prog03&Prog04 Diagram</a><br />
+				<a href='https://csis.svsu.edu/~ngbodeis/crud_oo_complete/uploads' target='_blank'>Uploaded Files</a><br />
                 <div class='container'>
                     <p class='row'>
                         <h3>$this->title" . "s" . "</h3>
@@ -334,8 +553,31 @@ class Customer {
                     ";
         $pdo = Database::connect();
         $sql = "SELECT * FROM $this->tableName ORDER BY id DESC";
+		
+		
+		
+		$source = ' https://csis.svsu.edu/~ngbodeis/crud_oo_complete/uploads/';
+		
+
+		
         foreach ($pdo->query($sql) as $row) {
+            
+			$pic = "";
+			$temp = $row['fileName'];
+			if($temp != "") {
+				$pic = ' <img src=' . $source .  $row['fileName'] . ' width="150" height="150">   ';
+			}
+			
             echo "<tr>";
+			
+			echo "<td>" . $pic . "</td>" ;
+			
+			
+			
+			
+			
+			
+		
             echo "<td>". $row["name"] . "</td>";
             echo "<td>". $row["email"] . "</td>";
             echo "<td>". $row["mobile"] . "</td>";
